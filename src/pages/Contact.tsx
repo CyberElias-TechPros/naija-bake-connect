@@ -48,7 +48,7 @@ const Contact = () => {
   return (
     <MainLayout>
       <div className="container mx-auto px-4 py-12">
-        <h1 className="text-3xl md:text-4xl font-heading font-bold mb-2 text-center">
+        <h1 className="text-3xl md:text-4xl font-heading font-bold mb-2 text-center text-bakery-black">
           Contact Us
         </h1>
         <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
@@ -60,7 +60,7 @@ const Contact = () => {
           {/* Contact Form */}
           <div className="lg:w-1/2">
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-2xl font-heading font-semibold mb-6">
+              <h2 className="text-2xl font-heading font-semibold mb-6 text-bakery-black">
                 Send Us a Message
               </h2>
               
@@ -125,7 +125,7 @@ const Contact = () => {
                 <Button 
                   type="submit" 
                   disabled={isSubmitting} 
-                  className="w-full bg-bakery-brown hover:bg-bakery-brown-light text-white"
+                  className="w-full bg-bakery-pink hover:bg-bakery-pink-dark text-white"
                 >
                   {isSubmitting ? "Sending..." : "Send Message"}
                 </Button>
@@ -135,15 +135,15 @@ const Contact = () => {
           
           {/* Contact Information */}
           <div className="lg:w-1/2">
-            <div className="bg-bakery-cream p-6 rounded-lg shadow-md h-full">
-              <h2 className="text-2xl font-heading font-semibold mb-6 text-bakery-brown">
+            <div className="bg-bakery-white-cream p-6 rounded-lg shadow-md h-full">
+              <h2 className="text-2xl font-heading font-semibold mb-6 text-bakery-black">
                 Contact Information
               </h2>
               
               <div className="space-y-6">
                 <div className="flex items-start">
                   <div className="bg-white p-3 rounded-full mr-4">
-                    <MapPin className="text-bakery-brown" />
+                    <MapPin className="text-bakery-pink" />
                   </div>
                   <div>
                     <h3 className="font-medium mb-1">Our Location</h3>
@@ -157,18 +157,13 @@ const Contact = () => {
                 
                 <div className="flex items-start">
                   <div className="bg-white p-3 rounded-full mr-4">
-                    <Phone className="text-bakery-brown" />
+                    <Phone className="text-bakery-pink" />
                   </div>
                   <div>
                     <h3 className="font-medium mb-1">Phone Number</h3>
                     <p className="text-muted-foreground">
-                      <a href="tel:+2341234567890" className="hover:text-bakery-brown transition-colors">
-                        +234 123 456 7890
-                      </a>
-                    </p>
-                    <p className="text-muted-foreground">
-                      <a href="tel:+2349876543210" className="hover:text-bakery-brown transition-colors">
-                        +234 987 654 3210
+                      <a href="tel:+2347069126887" className="hover:text-bakery-pink transition-colors">
+                        +234 706 912 6887
                       </a>
                     </p>
                   </div>
@@ -176,18 +171,13 @@ const Contact = () => {
                 
                 <div className="flex items-start">
                   <div className="bg-white p-3 rounded-full mr-4">
-                    <Mail className="text-bakery-brown" />
+                    <Mail className="text-bakery-pink" />
                   </div>
                   <div>
                     <h3 className="font-medium mb-1">Email Address</h3>
                     <p className="text-muted-foreground">
-                      <a href="mailto:info@naijabakeconnect.com" className="hover:text-bakery-brown transition-colors">
-                        info@naijabakeconnect.com
-                      </a>
-                    </p>
-                    <p className="text-muted-foreground">
-                      <a href="mailto:orders@naijabakeconnect.com" className="hover:text-bakery-brown transition-colors">
-                        orders@naijabakeconnect.com
+                      <a href="mailto:fortunecakes@techpros.com.ng" className="hover:text-bakery-pink transition-colors">
+                        fortunecakes@techpros.com.ng
                       </a>
                     </p>
                   </div>
@@ -195,7 +185,7 @@ const Contact = () => {
                 
                 <div className="flex items-start">
                   <div className="bg-white p-3 rounded-full mr-4">
-                    <Clock className="text-bakery-brown" />
+                    <Clock className="text-bakery-pink" />
                   </div>
                   <div>
                     <h3 className="font-medium mb-1">Business Hours</h3>
@@ -215,7 +205,7 @@ const Contact = () => {
                     <a 
                       key={social} 
                       href={`#${social}`}
-                      className="bg-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-bakery-orange hover:text-white transition-colors"
+                      className="bg-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-bakery-pink hover:text-white transition-colors"
                     >
                       <span className="sr-only">{social}</span>
                       <i className={`bi bi-${social}`}></i>
@@ -229,7 +219,7 @@ const Contact = () => {
         
         {/* Map (Placeholder) */}
         <div className="mt-12">
-          <h2 className="text-2xl font-heading font-semibold mb-6">
+          <h2 className="text-2xl font-heading font-semibold mb-6 text-bakery-black">
             Find Us
           </h2>
           <div className="h-96 bg-gray-200 rounded-lg flex items-center justify-center">

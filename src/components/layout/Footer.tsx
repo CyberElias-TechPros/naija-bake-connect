@@ -6,26 +6,26 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-bakery-brown text-white">
+    <footer className="bg-bakery-black text-white">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Logo and About */}
           <div className="space-y-4">
             <h3 className="font-heading text-2xl font-bold">
-              NaijaBake<span className="text-bakery-gold">Connect</span>
+              Fortune<span className="text-bakery-pink">Cakes</span>
             </h3>
             <p className="text-sm text-white/80">
               Bringing the finest Nigerian baked goods to your doorstep. We specialize in 
               delicious cakes, pastries, bread, and traditional Nigerian baked treats.
             </p>
             <div className="flex space-x-4 pt-2">
-              <a href="#" className="hover:text-bakery-gold transition-colors" aria-label="Facebook">
+              <a href="#" className="hover:text-bakery-pink transition-colors" aria-label="Facebook">
                 <Facebook size={20} />
               </a>
-              <a href="#" className="hover:text-bakery-gold transition-colors" aria-label="Instagram">
+              <a href="#" className="hover:text-bakery-pink transition-colors" aria-label="Instagram">
                 <Instagram size={20} />
               </a>
-              <a href="#" className="hover:text-bakery-gold transition-colors" aria-label="Twitter">
+              <a href="#" className="hover:text-bakery-pink transition-colors" aria-label="Twitter">
                 <Twitter size={20} />
               </a>
             </div>
@@ -45,7 +45,7 @@ const Footer = () => {
                 <li key={link.name}>
                   <Link
                     to={link.path}
-                    className="text-white/80 hover:text-bakery-gold transition-colors"
+                    className="text-white/80 hover:text-bakery-pink transition-colors"
                   >
                     {link.name}
                   </Link>
@@ -68,7 +68,7 @@ const Footer = () => {
                 <li key={category.name}>
                   <Link
                     to={category.path}
-                    className="text-white/80 hover:text-bakery-gold transition-colors"
+                    className="text-white/80 hover:text-bakery-pink transition-colors"
                   >
                     {category.name}
                   </Link>
@@ -87,14 +87,14 @@ const Footer = () => {
               </li>
               <li className="flex items-center">
                 <Phone size={18} className="mr-2 flex-shrink-0" />
-                <a href="tel:+2341234567890" className="text-white/80 hover:text-bakery-gold transition-colors">
-                  +234 123 456 7890
+                <a href="tel:+2347069126887" className="text-white/80 hover:text-bakery-pink transition-colors">
+                  +234 706 912 6887
                 </a>
               </li>
               <li className="flex items-center">
                 <Mail size={18} className="mr-2 flex-shrink-0" />
-                <a href="mailto:info@naijabakeconnect.com" className="text-white/80 hover:text-bakery-gold transition-colors">
-                  info@naijabakeconnect.com
+                <a href="mailto:fortunecakes@techpros.com.ng" className="text-white/80 hover:text-bakery-pink transition-colors">
+                  fortunecakes@techpros.com.ng
                 </a>
               </li>
               <li className="pt-2">
@@ -108,7 +108,7 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-white/20 mt-8 pt-6 text-center text-sm text-white/70">
-          <p>&copy; {currentYear} NaijaBakeConnect. All rights reserved.</p>
+          <p>&copy; {currentYear} Fortune Cakes. All rights reserved.</p>
         </div>
       </div>
     </footer>

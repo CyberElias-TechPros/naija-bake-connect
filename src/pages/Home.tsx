@@ -16,11 +16,11 @@ const Home = () => {
   return (
     <MainLayout>
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-bakery-brown to-bakery-brown-light text-white">
+      <section className="relative bg-gradient-to-r from-bakery-black to-bakery-black-light text-white">
         <div className="container mx-auto px-4 py-16 md:py-24 flex flex-col md:flex-row items-center">
           <div className="md:w-1/2 z-10">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-heading mb-4">
-              Authentic Nigerian<br />Baked Goodness
+              Delicious<br />Handcrafted Cakes
             </h1>
             <p className="text-lg mb-8 max-w-md">
               Discover the finest selection of freshly baked cakes, bread, pastries, 
@@ -28,12 +28,12 @@ const Home = () => {
             </p>
             <div className="flex flex-wrap gap-4">
               <Link to="/products">
-                <Button size="lg" className="bg-bakery-orange hover:bg-opacity-90 text-white">
+                <Button size="lg" className="bg-bakery-pink hover:bg-bakery-pink-dark text-white">
                   Shop Now <ArrowRight size={16} className="ml-2" />
                 </Button>
               </Link>
               <Link to="/about">
-                <Button variant="outline" size="lg" className="bg-transparent border-white text-white hover:bg-white hover:text-bakery-brown">
+                <Button variant="outline" size="lg" className="bg-transparent border-white text-white hover:bg-white hover:text-bakery-black">
                   About Us
                 </Button>
               </Link>
@@ -47,7 +47,7 @@ const Home = () => {
                 className="rounded-lg shadow-xl z-10 relative transform md:translate-x-12 animate-float"
                 style={{maxHeight: '500px', objectFit: 'cover'}}
               />
-              <div className="absolute inset-0 bg-bakery-orange rounded-lg transform translate-x-4 translate-y-4 -z-10"></div>
+              <div className="absolute inset-0 bg-bakery-pink rounded-lg transform translate-x-4 translate-y-4 -z-10"></div>
             </div>
           </div>
         </div>
@@ -94,13 +94,13 @@ const Home = () => {
       <FeaturedProducts />
 
       {/* Why Choose Us Section */}
-      <section className="section-padding bg-bakery-cream">
+      <section className="section-padding bg-bakery-white-cream">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-heading font-bold text-center mb-4 text-bakery-brown">
+          <h2 className="text-3xl md:text-4xl font-heading font-bold text-center mb-4 text-bakery-black">
             Why Choose Us
           </h2>
           <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-            At NaijaBakeConnect, we pride ourselves on quality, tradition, and exceptional service
+            At Fortune Cakes, we pride ourselves on quality, tradition, and exceptional service
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -128,7 +128,7 @@ const Home = () => {
             ].map((feature, index) => (
               <div key={index} className="bg-white p-6 rounded-lg shadow-md text-center">
                 <div className="text-4xl mb-4">{feature.icon}</div>
-                <h3 className="text-xl font-heading font-semibold text-bakery-brown mb-2">
+                <h3 className="text-xl font-heading font-semibold text-bakery-black mb-2">
                   {feature.title}
                 </h3>
                 <p className="text-muted-foreground">{feature.description}</p>
@@ -139,7 +139,7 @@ const Home = () => {
       </section>
 
       {/* Call to Action */}
-      <section className="py-16 bg-bakery-orange text-white">
+      <section className="py-16 bg-bakery-pink text-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4">
             Ready to Order?
@@ -148,7 +148,7 @@ const Home = () => {
             Place your order now and enjoy the authentic taste of Nigerian baked goods delivered to your doorstep.
           </p>
           <Link to="/products">
-            <Button size="lg" className="bg-white text-bakery-orange hover:bg-gray-100">
+            <Button size="lg" className="bg-white text-bakery-pink hover:bg-gray-100">
               Start Shopping
             </Button>
           </Link>

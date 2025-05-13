@@ -63,24 +63,24 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Custom bakery colors
+				// Custom bakery colors (updated to Fortune Cakes theme)
 				bakery: {
-					brown: {
-						light: '#A0522D',
-						DEFAULT: '#8B4513',
-						dark: '#3A2921'
+					pink: {
+						light: '#FFCCD5',
+						DEFAULT: '#FF85A1',
+						dark: '#FF5C7F'
 					},
-					orange: {
-						DEFAULT: '#FF8C00'
+					black: {
+						light: '#333333',
+						DEFAULT: '#1A1A1A',
+						dark: '#000000'
 					},
-					cream: {
-						DEFAULT: '#FFFDD0'
+					white: {
+						DEFAULT: '#FFFFFF',
+						cream: '#FFF9FA'
 					},
-					gold: {
-						DEFAULT: '#FFD700'
-					},
-					green: {
-						DEFAULT: '#228B22'
+					accent: {
+						DEFAULT: '#FFC0CB'
 					}
 				}
 			},
