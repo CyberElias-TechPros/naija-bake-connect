@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Category, Product } from "@/types";
 
@@ -37,17 +36,22 @@ export const fetchFeaturedProducts = async (): Promise<Product[]> => {
       
     if (error) throw error;
     
-    return data.map((product: any) => ({
-      id: product.id,
-      name: product.name,
-      description: product.description,
-      price: product.price,
-      category: product.category?.slug || '',
-      image: product.image_url || '',
-      featured: product.featured,
-      customizable: product.customizable,
-      options: await fetchProductOptions(product.id)
-    }));
+    const products = [];
+    for (const product of data) {
+      products.push({
+        id: product.id,
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        category: product.category?.slug || '',
+        image: product.image_url || '',
+        featured: product.featured,
+        customizable: product.customizable,
+        options: await fetchProductOptions(product.id)
+      });
+    }
+    
+    return products;
   } catch (error) {
     console.error('Error fetching featured products:', error);
     throw error;
