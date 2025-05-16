@@ -1,246 +1,270 @@
 
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Trash2, Minus, Plus, ShoppingBag } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { useCart } from '@/hooks/useCart';
-import { getProductById } from '@/data/mockData';
-import { Product } from '@/types';
-import { formatCurrency } from '@/utils/format';
+import { fetchProductById } from '@/services/supabaseService';
 import MainLayout from '@/components/layout/MainLayout';
+import { Button } from '@/components/ui/button';
+import { formatCurrency } from '@/utils/format';
+import { Loader, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
+import { Product } from '@/types';
 
-interface CartItemWithDetails {
+interface CartProductItem {
   productId: string;
-  product: Product;
+  product: Product | null;
   quantity: number;
   selectedOptions?: { [key: string]: string };
-  itemTotalPrice: number;
+  price?: number;
+  isLoading: boolean;
 }
 
 const Cart = () => {
-  const { items, updateItem, removeItem, totalAmount } = useCart();
-  const [cartItemsWithDetails, setCartItemsWithDetails] = useState<CartItemWithDetails[]>([]);
+  const { items, totalAmount, updateItem, removeItem } = useCart();
+  const [cartItems, setCartItems] = useState<CartProductItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchProductDetails = async () => {
-      setIsLoading(true);
-      try {
-        const itemsWithDetails = await Promise.all(
-          items.map(async (item) => {
-            const product = await getProductById(item.productId);
-            if (!product) {
-              throw new Error(`Product not found for ID: ${item.productId}`);
-            }
-
-            // Calculate price with options
-            let itemPrice = product.price;
-            if (item.selectedOptions && product.options) {
-              product.options.forEach(option => {
-                const selectedChoiceId = item.selectedOptions?.[option.name];
-                if (selectedChoiceId) {
-                  const choice = option.choices.find(c => c.id === selectedChoiceId);
-                  if (choice) {
-                    itemPrice += choice.priceAdjustment;
-                  }
-                }
-              });
-            }
-
-            return {
-              ...item,
-              product,
-              itemTotalPrice: itemPrice * item.quantity,
-            };
-          })
-        );
-        setCartItemsWithDetails(itemsWithDetails);
-      } catch (error) {
-        console.error('Error fetching cart item details:', error);
-      } finally {
+    const fetchProducts = async () => {
+      if (items.length === 0) {
         setIsLoading(false);
+        return;
       }
+
+      setIsLoading(true);
+      const cartProductPromises = items.map(async (item) => {
+        const product = await fetchProductById(item.productId);
+        return {
+          ...item,
+          product,
+          isLoading: false
+        };
+      });
+
+      const cartProducts = await Promise.all(cartProductPromises);
+      setCartItems(cartProducts);
+      setIsLoading(false);
     };
 
-    fetchProductDetails();
+    fetchProducts();
   }, [items]);
 
-  const handleQuantityChange = (productId: string, newQuantity: number, selectedOptions?: { [key: string]: string }) => {
-    if (newQuantity > 0) {
-      updateItem(productId, newQuantity, selectedOptions);
+  const handleQuantityChange = (productId: string, quantity: number, selectedOptions?: { [key: string]: string }) => {
+    // Find the cart item being updated
+    const cartItem = cartItems.find(item => 
+      item.productId === productId && 
+      JSON.stringify(item.selectedOptions) === JSON.stringify(selectedOptions)
+    );
+    
+    // Set loading state for this item
+    if (cartItem) {
+      setCartItems(prev => prev.map(item => 
+        item === cartItem ? { ...item, isLoading: true } : item
+      ));
     }
+    
+    // Update the item quantity
+    updateItem(productId, quantity, selectedOptions);
+    
+    // Reset loading state
+    setTimeout(() => {
+      setCartItems(prev => prev.map(item => 
+        item.productId === productId && JSON.stringify(item.selectedOptions) === JSON.stringify(selectedOptions) 
+          ? { ...item, isLoading: false } 
+          : item
+      ));
+    }, 300);
   };
 
-  const getOptionDetails = (item: CartItemWithDetails, optionName: string, optionId: string) => {
-    const option = item.product.options?.find(opt => opt.name === optionName);
-    const choice = option?.choices.find(c => c.id === optionId);
-    return choice ? choice.name : 'Unknown';
+  const handleRemoveItem = (productId: string, selectedOptions?: { [key: string]: string }) => {
+    removeItem(productId);
   };
 
-  if (isLoading) {
-    return (
-      <MainLayout>
-        <div className="container mx-auto px-4 py-8">
-          <h1 className="text-2xl font-heading font-bold mb-6">Your Cart</h1>
-          <div className="animate-pulse space-y-4">
-            {[1, 2].map(index => (
-              <div key={index} className="flex p-4 border rounded-lg">
-                <div className="h-24 w-24 bg-gray-200 rounded"></div>
-                <div className="flex-1 ml-4 space-y-2">
-                  <div className="h-5 bg-gray-200 rounded w-1/3"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/5"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
-
-  if (cartItemsWithDetails.length === 0) {
-    return (
-      <MainLayout>
-        <div className="container mx-auto px-4 py-12 text-center">
-          <div className="max-w-md mx-auto">
-            <ShoppingBag size={64} className="mx-auto text-muted-foreground mb-4" />
-            <h1 className="text-2xl font-heading font-bold mb-4">Your Cart is Empty</h1>
-            <p className="text-muted-foreground mb-8">
-              Looks like you haven't added any items to your cart yet.
-            </p>
-            <Link to="/products">
-              <Button className="bg-bakery-brown hover:bg-bakery-brown-light text-white">
-                Browse Products
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
+  // Helper to display option choices in a readable format
+  const getOptionLabel = (product: Product, optionName: string, choiceId: string): string => {
+    const option = product.options?.find(opt => opt.name === optionName);
+    if (!option) return '';
+    
+    const choice = option.choices.find(c => c.id === choiceId);
+    return choice ? choice.name : '';
+  };
 
   return (
     <MainLayout>
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl md:text-3xl font-heading font-bold mb-6">Your Cart</h1>
-
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Cart Items */}
-          <div className="lg:w-2/3">
-            <div className="space-y-4">
-              {cartItemsWithDetails.map((item) => (
-                <div key={item.productId} className="flex flex-col sm:flex-row border rounded-lg p-4 bg-white">
-                  {/* Product Image */}
-                  <div className="sm:w-24 sm:h-24 rounded overflow-hidden flex-shrink-0 mb-4 sm:mb-0">
-                    <Link to={`/products/${item.productId}`}>
-                      <img 
-                        src={item.product.image} 
-                        alt={item.product.name} 
-                        className="w-full h-full object-cover"
-                      />
-                    </Link>
-                  </div>
-
-                  {/* Product Details */}
-                  <div className="flex-1 sm:ml-4 flex flex-col">
-                    <div className="flex justify-between mb-1">
-                      <Link to={`/products/${item.productId}`} className="font-medium hover:text-bakery-brown">
-                        {item.product.name}
-                      </Link>
-                      <div className="font-semibold">
-                        {formatCurrency(item.itemTotalPrice)}
-                      </div>
-                    </div>
-                    
-                    {/* Selected options */}
-                    {item.selectedOptions && Object.keys(item.selectedOptions).length > 0 && (
-                      <div className="text-sm text-muted-foreground mb-2">
-                        {Object.entries(item.selectedOptions).map(([optionName, optionId]) => (
-                          <div key={optionName}>
-                            {optionName}: {getOptionDetails(item, optionName, optionId)}
+      <div className="container mx-auto px-4 py-12">
+        <h1 className="text-3xl font-heading font-bold mb-8">Shopping Cart</h1>
+        
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <Loader className="h-8 w-8 animate-spin text-bakery-pink" />
+          </div>
+        ) : cartItems.length === 0 ? (
+          <div className="text-center py-16 bg-white rounded-lg shadow">
+            <ShoppingBag className="mx-auto h-16 w-16 text-gray-300" />
+            <h2 className="mt-4 text-xl font-medium">Your cart is empty</h2>
+            <p className="mt-2 text-muted-foreground">
+              Looks like you haven't added any products to your cart yet.
+            </p>
+            <Button className="mt-6 bg-bakery-pink hover:bg-bakery-pink-dark" asChild>
+              <Link to="/products">Start Shopping</Link>
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Cart Items */}
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-lg shadow overflow-hidden">
+                <div className="p-6 border-b">
+                  <h2 className="text-xl font-medium">Cart Items ({cartItems.length})</h2>
+                </div>
+                
+                <div className="divide-y">
+                  {cartItems.map((item, index) => (
+                    <div key={`${item.productId}-${JSON.stringify(item.selectedOptions)}-${index}`} className="p-6">
+                      {item.product ? (
+                        <div className="flex flex-col sm:flex-row">
+                          {/* Product Image */}
+                          <div className="flex-shrink-0 sm:w-24 sm:h-24 mb-4 sm:mb-0">
+                            <img
+                              src={item.product.image}
+                              alt={item.product.name}
+                              className="w-full h-full object-cover rounded"
+                            />
                           </div>
-                        ))}
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-between mt-auto pt-3">
-                      {/* Quantity controls */}
-                      <div className="flex items-center">
-                        <Button 
-                          variant="outline" 
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => handleQuantityChange(item.productId, item.quantity - 1, item.selectedOptions)}
-                          disabled={item.quantity <= 1}
-                        >
-                          <Minus size={14} />
-                        </Button>
-                        <span className="w-8 text-center font-medium">{item.quantity}</span>
-                        <Button 
-                          variant="outline" 
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => handleQuantityChange(item.productId, item.quantity + 1, item.selectedOptions)}
-                        >
-                          <Plus size={14} />
-                        </Button>
-                      </div>
-
-                      {/* Remove button */}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeItem(item.productId)}
-                        className="text-muted-foreground hover:text-destructive"
-                      >
-                        <Trash2 size={16} className="mr-1" />
-                        <span className="hidden sm:inline">Remove</span>
-                      </Button>
+                          
+                          {/* Product Details */}
+                          <div className="flex-grow sm:ml-6">
+                            <div className="flex flex-col sm:flex-row justify-between">
+                              <div>
+                                <h3 className="text-lg font-medium">{item.product.name}</h3>
+                                
+                                {/* Selected Options */}
+                                {item.selectedOptions && Object.entries(item.selectedOptions).length > 0 && (
+                                  <div className="mt-1 text-sm text-muted-foreground">
+                                    {Object.entries(item.selectedOptions).map(([optionName, choiceId]) => (
+                                      <div key={optionName}>
+                                        {optionName}: {getOptionLabel(item.product!, optionName, choiceId)}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                
+                                {/* Price */}
+                                <div className="mt-2 font-medium">
+                                  {formatCurrency(item.price || 0)}
+                                </div>
+                              </div>
+                              
+                              {/* Quantity Controls */}
+                              <div className="mt-4 sm:mt-0 flex items-center">
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => handleQuantityChange(
+                                    item.productId,
+                                    item.quantity - 1,
+                                    item.selectedOptions
+                                  )}
+                                  disabled={item.quantity <= 1 || item.isLoading}
+                                  className="h-8 w-8"
+                                >
+                                  <Minus className="h-3 w-3" />
+                                </Button>
+                                <span className="w-12 text-center">
+                                  {item.isLoading ? (
+                                    <Loader className="inline h-4 w-4 animate-spin" />
+                                  ) : (
+                                    item.quantity
+                                  )}
+                                </span>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => handleQuantityChange(
+                                    item.productId,
+                                    item.quantity + 1,
+                                    item.selectedOptions
+                                  )}
+                                  disabled={item.isLoading}
+                                  className="h-8 w-8"
+                                >
+                                  <Plus className="h-3 w-3" />
+                                </Button>
+                                
+                                {/* Remove Button */}
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleRemoveItem(
+                                    item.productId,
+                                    item.selectedOptions
+                                  )}
+                                  disabled={item.isLoading}
+                                  className="ml-4 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-muted-foreground">Product not available</p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveItem(item.productId)}
+                            className="text-red-500 hover:text-red-600"
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            {/* Cart Summary */}
+            <div>
+              <div className="bg-white rounded-lg shadow p-6 sticky top-24">
+                <h2 className="text-xl font-medium mb-4">Order Summary</h2>
+                
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span>Subtotal</span>
+                    <span>{formatCurrency(totalAmount)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>Delivery</span>
+                    <span>Calculated at checkout</span>
+                  </div>
+                  <div className="border-t pt-3 mt-3">
+                    <div className="flex justify-between font-bold">
+                      <span>Total</span>
+                      <span>{formatCurrency(totalAmount)}</span>
                     </div>
                   </div>
                 </div>
-              ))}
+                
+                <Button className="w-full mt-6 bg-bakery-pink hover:bg-bakery-pink-dark" asChild>
+                  <Link to="/checkout">
+                    Proceed to Checkout
+                  </Link>
+                </Button>
+                
+                <Button variant="outline" className="w-full mt-4" asChild>
+                  <Link to="/products">
+                    Continue Shopping
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
-
-          {/* Order Summary */}
-          <div className="lg:w-1/3">
-            <div className="bg-white border rounded-lg p-6 sticky top-24">
-              <h2 className="text-xl font-heading font-semibold mb-4">Order Summary</h2>
-              
-              <div className="space-y-2 mb-4">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span className="font-medium">{formatCurrency(totalAmount)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Delivery Fee</span>
-                  <span className="font-medium">To be calculated</span>
-                </div>
-              </div>
-              
-              <div className="border-t pt-4 mb-6">
-                <div className="flex justify-between text-lg font-semibold">
-                  <span>Total</span>
-                  <span className="text-bakery-brown">{formatCurrency(totalAmount)}</span>
-                </div>
-              </div>
-              
-              <Link to="/checkout">
-                <Button className="w-full bg-bakery-brown hover:bg-bakery-brown-light text-white py-6">
-                  Proceed to Checkout
-                </Button>
-              </Link>
-              
-              <Link to="/products">
-                <Button variant="link" className="mt-4 w-full text-bakery-brown hover:text-bakery-brown-light">
-                  Continue Shopping
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
     </MainLayout>
   );

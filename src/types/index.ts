@@ -26,6 +26,7 @@ export interface CartItem {
   selectedOptions?: {
     [optionName: string]: string;
   };
+  price?: number; // Unit price + options adjustments
 }
 
 export interface Order {
@@ -52,4 +53,55 @@ export interface Category {
   id: string;
   name: string;
   slug: string;
+  image?: string;
+}
+
+export interface UserProfile {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+}
+
+export interface OrderSummary {
+  id: string;
+  created_at: string;
+  status: string;
+  total_amount: number;
+  recipient_name: string;
+}
+
+export interface OrderDetail {
+  order: {
+    id: string;
+    created_at: string;
+    status: string;
+    total_amount: number;
+    recipient_name: string;
+    recipient_email: string;
+    recipient_phone: string;
+    delivery_address: string;
+    delivery_city: string;
+    delivery_state: string;
+    payment_method: string;
+    delivery_method: string;
+    notes: string;
+  };
+  items: OrderItem[];
+}
+
+export interface OrderItem {
+  id: string;
+  productId: string;
+  productName: string;
+  productImage: string;
+  quantity: number;
+  price: number;
+  selectedOptions?: {
+    [optionName: string]: string;
+  };
 }

@@ -1,17 +1,33 @@
 
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import FeaturedProducts from '@/components/products/FeaturedProducts';
 import MainLayout from '@/components/layout/MainLayout';
+import { fetchCategories } from '@/services/supabaseService';
+import { Category } from '@/types';
 
 const Home = () => {
-  const categories = [
-    { name: 'Cakes', image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?q=80&w=500&auto=format', path: '/products?category=cakes' },
-    { name: 'Bread', image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?q=80&w=500&auto=format', path: '/products?category=bread' },
-    { name: 'Pastries', image: 'https://images.unsplash.com/photo-1576618148400-f54bed99fcfd?q=80&w=500&auto=format', path: '/products?category=pastries' },
-    { name: 'Pies & Snacks', image: 'https://images.unsplash.com/photo-1621743478914-cc8a68d76208?q=80&w=500&auto=format', path: '/products?category=pies' },
-  ];
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setIsLoading(true);
+        const data = await fetchCategories();
+        // Only display the first 4 categories on the home page
+        setCategories(data.slice(0, 4));
+      } catch (error) {
+        console.error('Error loading categories:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadCategories();
+  }, []);
 
   return (
     <MainLayout>
@@ -63,30 +79,38 @@ const Home = () => {
             Browse through our wide selection of freshly baked Nigerian delicacies
           </p>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {categories.map((category) => (
-              <Link 
-                to={category.path} 
-                key={category.name}
-                className="group relative overflow-hidden rounded-lg card-hover"
-              >
-                <div className="aspect-square">
-                  <img 
-                    src={category.image} 
-                    alt={category.name} 
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                  <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                    <h3 className="text-xl font-heading font-semibold">{category.name}</h3>
-                    <span className="flex items-center text-sm mt-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                      Shop Now <ChevronRight size={16} className="ml-1 group-hover:ml-2 transition-all" />
-                    </span>
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[1, 2, 3, 4].map((item) => (
+                <div key={item} className="aspect-square rounded-lg bg-gray-200 animate-pulse"></div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {categories.map((category) => (
+                <Link 
+                  to={`/products?category=${category.slug}`} 
+                  key={category.id}
+                  className="group relative overflow-hidden rounded-lg card-hover"
+                >
+                  <div className="aspect-square">
+                    <img 
+                      src={category.image} 
+                      alt={category.name} 
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                    <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                      <h3 className="text-xl font-heading font-semibold">{category.name}</h3>
+                      <span className="flex items-center text-sm mt-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                        Shop Now <ChevronRight size={16} className="ml-1 group-hover:ml-2 transition-all" />
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

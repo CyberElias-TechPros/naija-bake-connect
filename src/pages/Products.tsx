@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { getProducts, getProductsByCategory, getCategories } from '@/data/mockData';
+import { fetchAllProducts, fetchProductsByCategory, fetchCategories } from '@/services/supabaseService';
 import { Product, Category } from '@/types';
 import ProductCard from '@/components/products/ProductCard';
 import MainLayout from '@/components/layout/MainLayout';
@@ -23,14 +23,14 @@ const Products = () => {
     const loadData = async () => {
       setIsLoading(true);
       try {
-        const categoriesData = await getCategories();
+        const categoriesData = await fetchCategories();
         setCategories(categoriesData);
 
         let productsData: Product[];
         if (categoryParam) {
-          productsData = await getProductsByCategory(categoryParam);
+          productsData = await fetchProductsByCategory(categoryParam);
         } else {
-          productsData = await getProducts();
+          productsData = await fetchAllProducts();
         }
         setProducts(productsData);
       } catch (error) {
@@ -110,7 +110,7 @@ const Products = () => {
                 variant={!categoryParam ? "default" : "outline"}
                 size="sm"
                 onClick={() => handleCategoryFilter('all')}
-                className={!categoryParam ? "bg-bakery-brown text-white" : ""}
+                className={!categoryParam ? "bg-bakery-pink text-white" : ""}
               >
                 All
               </Button>
@@ -120,7 +120,7 @@ const Products = () => {
                   variant={categoryParam === category.slug ? "default" : "outline"}
                   size="sm"
                   onClick={() => handleCategoryFilter(category.slug)}
-                  className={categoryParam === category.slug ? "bg-bakery-brown text-white" : ""}
+                  className={categoryParam === category.slug ? "bg-bakery-pink text-white" : ""}
                 >
                   {category.name}
                 </Button>

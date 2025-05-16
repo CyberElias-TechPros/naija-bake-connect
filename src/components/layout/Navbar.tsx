@@ -1,13 +1,23 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ShoppingBag, Menu, X, User, Phone } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ShoppingBag, Menu, X, User, Phone, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/hooks/useCart';
+import { useAuth } from '@/hooks/useAuth';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { totalItems } = useCart();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   const navLinks = [
     { name: 'Home', path: '/' },
@@ -17,6 +27,11 @@ const Navbar = () => {
   ];
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-50">
@@ -52,9 +67,32 @@ const Navbar = () => {
 
           {/* Action Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link to="/account" className="p-2 rounded-full hover:bg-muted transition-colors">
-              <User size={20} className="text-bakery-black-light" />
-            </Link>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full">
+                    <User size={20} className="text-bakery-black-light" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => navigate('/account')}>
+                    My Account
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/orders')}>
+                    My Orders
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link to="/auth" className="p-2 rounded-full hover:bg-muted transition-colors">
+                <User size={20} className="text-bakery-black-light" />
+              </Link>
+            )}
             <Link to="/cart" className="relative p-2 rounded-full hover:bg-muted transition-colors">
               <ShoppingBag size={20} className="text-bakery-black-light" />
               {totalItems > 0 && (
@@ -105,13 +143,41 @@ const Navbar = () => {
                   {link.name}
                 </Link>
               ))}
-              <Link
-                to="/account"
-                className="px-3 py-2 font-medium text-bakery-black-light hover:bg-muted rounded flex items-center"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <User size={18} className="mr-2" /> My Account
-              </Link>
+              {user ? (
+                <>
+                  <Link
+                    to="/account"
+                    className="px-3 py-2 font-medium text-bakery-black-light hover:bg-muted rounded flex items-center"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <User size={18} className="mr-2" /> My Account
+                  </Link>
+                  <Link
+                    to="/orders"
+                    className="px-3 py-2 font-medium text-bakery-black-light hover:bg-muted rounded flex items-center"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Orders
+                  </Link>
+                  <button
+                    onClick={() => {
+                      handleSignOut();
+                      setIsMenuOpen(false);
+                    }}
+                    className="px-3 py-2 font-medium text-bakery-black-light hover:bg-muted rounded flex items-center w-full text-left"
+                  >
+                    <LogOut size={18} className="mr-2" /> Sign Out
+                  </button>
+                </>
+              ) : (
+                <Link
+                  to="/auth"
+                  className="px-3 py-2 font-medium text-bakery-black-light hover:bg-muted rounded flex items-center"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <User size={18} className="mr-2" /> Sign In
+                </Link>
+              )}
               <a
                 href="tel:+2347069126887"
                 className="px-3 py-2 font-medium text-bakery-black-light hover:bg-muted rounded flex items-center"

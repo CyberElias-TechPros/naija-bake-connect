@@ -1,7 +1,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { CartItem, Product } from '@/types';
-import { getProductById } from '@/data/mockData';
+import { fetchProductById } from '@/services/supabaseService';
 import { toast } from '@/components/ui/use-toast';
 
 interface CartContextType {
@@ -41,24 +41,36 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       let total = 0;
       
       for (const item of items) {
-        const product = await getProductById(item.productId);
-        if (product) {
-          let itemPrice = product.price;
-          
-          // Add price adjustments for selected options
-          if (item.selectedOptions && product.options) {
-            product.options.forEach(option => {
-              const selectedChoiceId = item.selectedOptions?.[option.name];
-              if (selectedChoiceId) {
-                const choice = option.choices.find(c => c.id === selectedChoiceId);
-                if (choice) {
-                  itemPrice += choice.priceAdjustment;
+        // If the item already has a calculated price, use it
+        if (item.price) {
+          total += item.price * item.quantity;
+        } else {
+          const product = await fetchProductById(item.productId);
+          if (product) {
+            let itemPrice = product.price;
+            
+            // Add price adjustments for selected options
+            if (item.selectedOptions && product.options) {
+              product.options.forEach(option => {
+                const selectedChoiceId = item.selectedOptions?.[option.name];
+                if (selectedChoiceId) {
+                  const choice = option.choices.find(c => c.id === selectedChoiceId);
+                  if (choice) {
+                    itemPrice += choice.priceAdjustment;
+                  }
                 }
-              }
-            });
+              });
+            }
+            
+            // Update the item with calculated price
+            setItems(prevItems => 
+              prevItems.map(prevItem => 
+                prevItem.productId === item.productId ? { ...prevItem, price: itemPrice } : prevItem
+              )
+            );
+            
+            total += itemPrice * item.quantity;
           }
-          
-          total += itemPrice * item.quantity;
         }
       }
       

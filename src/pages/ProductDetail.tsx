@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getProductById } from '@/data/mockData';
+import { fetchProductById } from '@/services/supabaseService';
 import { Product, ProductOption } from '@/types';
 import MainLayout from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -27,7 +27,7 @@ const ProductDetail = () => {
       
       setIsLoading(true);
       try {
-        const productData = await getProductById(id);
+        const productData = await fetchProductById(id);
         if (productData) {
           setProduct(productData);
           
@@ -35,7 +35,9 @@ const ProductDetail = () => {
           if (productData.options) {
             const initialOptions: { [key: string]: string } = {};
             productData.options.forEach(option => {
-              initialOptions[option.name] = option.choices[0].id;
+              if (option.choices.length > 0) {
+                initialOptions[option.name] = option.choices[0].id;
+              }
             });
             setSelectedOptions(initialOptions);
           }
@@ -88,10 +90,23 @@ const ProductDetail = () => {
   const handleAddToCart = () => {
     if (!product) return;
     
+    // Calculate unit price with options
+    let unitPrice = product.price;
+    if (product.options) {
+      product.options.forEach(option => {
+        const selectedOptionId = selectedOptions[option.name];
+        const selectedChoice = option.choices.find(choice => choice.id === selectedOptionId);
+        if (selectedChoice) {
+          unitPrice += selectedChoice.priceAdjustment;
+        }
+      });
+    }
+    
     addItem({
       productId: product.id,
       quantity,
-      selectedOptions
+      selectedOptions,
+      price: unitPrice
     });
   };
 
@@ -144,7 +159,7 @@ const ProductDetail = () => {
         <div className="mb-6">
           <Link 
             to="/products" 
-            className="flex items-center text-sm text-muted-foreground hover:text-bakery-brown transition-colors"
+            className="flex items-center text-sm text-muted-foreground hover:text-bakery-pink transition-colors"
           >
             <ChevronLeft size={16} className="mr-1" /> Back to Products
           </Link>
@@ -165,7 +180,7 @@ const ProductDetail = () => {
           {/* Product Details */}
           <div className="lg:w-1/2">
             <h1 className="text-3xl font-heading font-bold mb-2">{product.name}</h1>
-            <div className="text-2xl font-semibold text-bakery-brown mb-4">
+            <div className="text-2xl font-semibold text-bakery-pink mb-4">
               {formatCurrency(totalPrice)}
             </div>
 
@@ -180,7 +195,7 @@ const ProductDetail = () => {
                   <div key={option.name}>
                     <h3 className="text-lg font-medium mb-3">{option.name}</h3>
                     <RadioGroup 
-                      value={selectedOptions[option.name]} 
+                      value={selectedOptions[option.name] || ''} 
                       onValueChange={(value) => handleOptionChange(option.name, value)}
                       className="space-y-2"
                     >
@@ -229,7 +244,7 @@ const ProductDetail = () => {
             {/* Add to Cart Button */}
             <Button 
               onClick={handleAddToCart}
-              className="w-full bg-bakery-brown hover:bg-bakery-brown-light text-white flex items-center justify-center py-6"
+              className="w-full bg-bakery-pink hover:bg-bakery-pink-dark text-white flex items-center justify-center py-6"
             >
               <ShoppingBag size={18} className="mr-2" />
               Add to Cart

@@ -1,144 +1,93 @@
 
-import { useState } from "react";
-import MainLayout from "@/components/layout/MainLayout";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { toast } from "@/components/ui/use-toast";
+import { useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { getUserProfile, updateUserProfile } from '@/services/supabaseService';
+import MainLayout from '@/components/layout/MainLayout';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from '@/components/ui/use-toast';
+import { UserProfile } from '@/types';
+import { Loader } from 'lucide-react';
 
 const Account = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [loginForm, setLoginForm] = useState({ email: "", password: "" });
-  const [signupForm, setSignupForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
+  const { user } = useAuth();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setLoginForm({
-      ...loginForm,
-      [e.target.name]: e.target.value,
-    });
-  };
+  // If not logged in, redirect to auth page
+  if (!user && !isLoading) {
+    return <Navigate to="/auth" state={{ from: { pathname: '/account' } }} />;
+  }
 
-  const handleSignupChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSignupForm({
-      ...signupForm,
-      [e.target.name]: e.target.value,
-    });
-  };
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user) return;
+      
+      try {
+        setIsLoading(true);
+        const userProfile = await getUserProfile();
+        
+        if (userProfile) {
+          setProfile({
+            ...userProfile,
+            email: user.email
+          });
+        } else {
+          setProfile({
+            id: user.id,
+            email: user.email
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load profile information',
+          variant: 'destructive'
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const handleLogin = (e: React.FormEvent) => {
+    fetchProfile();
+  }, [user]);
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate login
-    setIsLoggedIn(true);
-    toast({
-      title: "Logged in successfully",
-      description: "Welcome back to NaijaBakeConnect!",
-    });
-  };
-
-  const handleSignup = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Validation
-    if (signupForm.password !== signupForm.confirmPassword) {
-      toast({
-        title: "Password mismatch",
-        description: "Passwords do not match. Please try again.",
-        variant: "destructive",
-      });
-      return;
-    }
     
-    // Simulate signup
-    setIsLoggedIn(true);
-    toast({
-      title: "Account created successfully",
-      description: "Welcome to NaijaBakeConnect!",
-    });
+    if (!profile) return;
+    
+    try {
+      setIsSaving(true);
+      await updateUserProfile(profile);
+      
+      toast({
+        title: 'Profile updated',
+        description: 'Your profile has been updated successfully'
+      });
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update profile',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    toast({
-      title: "Logged out successfully",
-      description: "You have been logged out of your account.",
-    });
-  };
-
-  if (isLoggedIn) {
+  if (isLoading) {
     return (
       <MainLayout>
         <div className="container mx-auto px-4 py-12">
-          <div className="max-w-3xl mx-auto">
-            <h1 className="text-3xl font-heading font-bold mb-6">My Account</h1>
-            
-            <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-xl font-semibold">Account Information</h2>
-                  <p className="text-muted-foreground">Manage your personal information</p>
-                </div>
-                <Button variant="outline" onClick={handleLogout}>
-                  Log Out
-                </Button>
-              </div>
-              
-              <div className="divide-y">
-                <div className="py-4">
-                  <p className="text-sm text-muted-foreground">Name</p>
-                  <p className="font-medium">John Doe</p>
-                </div>
-                <div className="py-4">
-                  <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="font-medium">johndoe@example.com</p>
-                </div>
-                <div className="py-4">
-                  <p className="text-sm text-muted-foreground">Phone</p>
-                  <p className="font-medium">+234 123 456 7890</p>
-                </div>
-                <div className="py-4">
-                  <p className="text-sm text-muted-foreground">Default Address</p>
-                  <p className="font-medium">123 Main Street, Lagos, Nigeria</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold mb-4">Recent Orders</h2>
-              
-              <div className="divide-y">
-                {[1, 2, 3].map((order) => (
-                  <div key={order} className="py-4 flex flex-col md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <p className="font-medium">Order #{order}12345</p>
-                      <p className="text-sm text-muted-foreground">Placed on May {order + 5}, 2023</p>
-                      <p className="text-sm">3 items - ₦12,{order}00</p>
-                    </div>
-                    <div className="mt-2 md:mt-0">
-                      <span className="inline-block px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-                        {order === 1 ? 'Delivered' : order === 2 ? 'Processing' : 'Pending'}
-                      </span>
-                      <Button variant="link" className="text-bakery-brown p-0 h-auto ml-2">
-                        View Details
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-                
-                {/* No orders state */}
-                {false && (
-                  <div className="py-8 text-center">
-                    <p className="text-muted-foreground">You haven't placed any orders yet.</p>
-                    <Button variant="link" className="text-bakery-brown mt-2">
-                      Start Shopping
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
+          <div className="flex justify-center items-center h-64">
+            <Loader className="h-8 w-8 animate-spin text-bakery-pink" />
           </div>
         </div>
       </MainLayout>
@@ -148,141 +97,115 @@ const Account = () => {
   return (
     <MainLayout>
       <div className="container mx-auto px-4 py-12">
-        <div className="max-w-md mx-auto">
-          <h1 className="text-3xl font-heading font-bold mb-6 text-center">Account Access</h1>
-          
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <Tabs defaultValue="login">
-              <TabsList className="grid grid-cols-2 mb-6">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="login">
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium mb-1">
-                      Email Address
-                    </label>
+        <h1 className="text-3xl font-heading font-bold mb-8">My Account</h1>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Profile Information */}
+          <div className="md:col-span-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Profile Information</CardTitle>
+                <CardDescription>Update your account details</CardDescription>
+              </CardHeader>
+              <form onSubmit={handleUpdateProfile}>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">First Name</Label>
+                      <Input
+                        id="firstName"
+                        value={profile?.firstName || ''}
+                        onChange={(e) => setProfile({ ...profile!, firstName: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">Last Name</Label>
+                      <Input
+                        id="lastName"
+                        value={profile?.lastName || ''}
+                        onChange={(e) => setProfile({ ...profile!, lastName: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
                     <Input
                       id="email"
-                      name="email"
                       type="email"
-                      value={loginForm.email}
-                      onChange={handleLoginChange}
-                      placeholder="Enter your email"
-                      required
+                      value={profile?.email || ''}
+                      disabled
                     />
                   </div>
                   
-                  <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <label htmlFor="password" className="block text-sm font-medium">
-                        Password
-                      </label>
-                      <a href="#" className="text-xs text-bakery-brown hover:underline">
-                        Forgot Password?
-                      </a>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input
+                      id="phone"
+                      value={profile?.phone || ''}
+                      onChange={(e) => setProfile({ ...profile!, phone: e.target.value })}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Address</Label>
+                    <Input
+                      id="address"
+                      value={profile?.address || ''}
+                      onChange={(e) => setProfile({ ...profile!, address: e.target.value })}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="city">City</Label>
+                      <Input
+                        id="city"
+                        value={profile?.city || ''}
+                        onChange={(e) => setProfile({ ...profile!, city: e.target.value })}
+                      />
                     </div>
-                    <Input
-                      id="password"
-                      name="password"
-                      type="password"
-                      value={loginForm.password}
-                      onChange={handleLoginChange}
-                      placeholder="Enter your password"
-                      required
-                    />
+                    <div className="space-y-2">
+                      <Label htmlFor="state">State</Label>
+                      <Input
+                        id="state"
+                        value={profile?.state || ''}
+                        onChange={(e) => setProfile({ ...profile!, state: e.target.value })}
+                      />
+                    </div>
                   </div>
-                  
+                </CardContent>
+                <CardFooter>
                   <Button 
                     type="submit" 
-                    className="w-full bg-bakery-brown hover:bg-bakery-brown-light text-white"
+                    className="bg-bakery-pink hover:bg-bakery-pink-dark"
+                    disabled={isSaving}
                   >
-                    Login
+                    {isSaving ? <Loader className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Save Changes
                   </Button>
-                </form>
-              </TabsContent>
-              
-              <TabsContent value="signup">
-                <form onSubmit={handleSignup} className="space-y-4">
-                  <div>
-                    <label htmlFor="name" className="block text-sm font-medium mb-1">
-                      Full Name
-                    </label>
-                    <Input
-                      id="name"
-                      name="name"
-                      value={signupForm.name}
-                      onChange={handleSignupChange}
-                      placeholder="Enter your full name"
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="signup-email" className="block text-sm font-medium mb-1">
-                      Email Address
-                    </label>
-                    <Input
-                      id="signup-email"
-                      name="email"
-                      type="email"
-                      value={signupForm.email}
-                      onChange={handleSignupChange}
-                      placeholder="Enter your email"
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="signup-password" className="block text-sm font-medium mb-1">
-                      Password
-                    </label>
-                    <Input
-                      id="signup-password"
-                      name="password"
-                      type="password"
-                      value={signupForm.password}
-                      onChange={handleSignupChange}
-                      placeholder="Create a password"
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="confirm-password" className="block text-sm font-medium mb-1">
-                      Confirm Password
-                    </label>
-                    <Input
-                      id="confirm-password"
-                      name="confirmPassword"
-                      type="password"
-                      value={signupForm.confirmPassword}
-                      onChange={handleSignupChange}
-                      placeholder="Confirm your password"
-                      required
-                    />
-                  </div>
-                  
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-bakery-brown hover:bg-bakery-brown-light text-white"
-                  >
-                    Create Account
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
-            
-            <div className="mt-6 pt-6 border-t text-sm text-center text-muted-foreground">
-              <p>By logging in or creating an account, you agree to our</p>
-              <div className="flex justify-center gap-2 mt-1">
-                <a href="#" className="text-bakery-brown hover:underline">Terms of Service</a>
-                <span>&</span>
-                <a href="#" className="text-bakery-brown hover:underline">Privacy Policy</a>
-              </div>
-            </div>
+                </CardFooter>
+              </form>
+            </Card>
+          </div>
+          
+          {/* Quick Links */}
+          <div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Links</CardTitle>
+                <CardDescription>Access your account features</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  asChild
+                >
+                  <a href="/orders">Order History</a>
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
