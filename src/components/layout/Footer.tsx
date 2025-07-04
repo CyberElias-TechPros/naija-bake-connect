@@ -18,8 +18,11 @@ const Footer = () => {
                 alt="Fortune Cakes Logo" 
                 className="h-10 w-auto"
                 onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling.style.display = 'block';
+                  (e.currentTarget as HTMLImageElement).style.display = 'none';
+                  const nextSibling = e.currentTarget.nextElementSibling as HTMLElement;
+                  if (nextSibling) {
+                    nextSibling.style.display = 'block';
+                  }
                 }}
               />
               <div className="hidden font-heading">

@@ -10,9 +10,8 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
-  const { getTotalItems } = useCart();
-  const { user, logout } = useAuth();
-  const totalItems = getTotalItems();
+  const { totalItems } = useCart();
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -60,8 +59,11 @@ const Navbar = () => {
               className="h-10 w-auto lg:h-12"
               onError={(e) => {
                 // Fallback if logo fails to load
-                e.currentTarget.style.display = 'none';
-                e.currentTarget.nextElementSibling.style.display = 'block';
+                (e.currentTarget as HTMLImageElement).style.display = 'none';
+                const nextSibling = e.currentTarget.nextElementSibling as HTMLElement;
+                if (nextSibling) {
+                  nextSibling.style.display = 'block';
+                }
               }}
             />
             <div className="hidden font-heading">
@@ -132,7 +134,7 @@ const Navbar = () => {
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    onClick={logout}
+                    onClick={signOut}
                     className="text-xs hover:bg-red-50 hover:text-red-600"
                   >
                     Logout
@@ -203,7 +205,7 @@ const Navbar = () => {
                       </Link>
                       <button
                         onClick={() => {
-                          logout();
+                          signOut();
                           closeMenu();
                         }}
                         className="flex items-center space-x-2 text-red-600 hover:bg-red-50 py-2 px-3 rounded-md transition-colors w-full text-left"
