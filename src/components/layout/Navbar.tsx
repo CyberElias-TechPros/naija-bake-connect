@@ -1,189 +1,234 @@
 
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingBag, Menu, X, User, Phone, LogOut } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Menu, X, ShoppingBag, User, Search, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { totalItems } = useCart();
-  const { user, signOut } = useAuth();
-  const navigate = useNavigate();
+  const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const location = useLocation();
+  const { getTotalItems } = useCart();
+  const { user, logout } = useAuth();
+  const totalItems = getTotalItems();
 
-  const navLinks = [
-    { name: 'Home', path: '/' },
-    { name: 'Products', path: '/products' },
-    { name: 'About', path: '/about' },
-    { name: 'Contact', path: '/contact' },
-  ];
+  useEffect(() => {
+    const handleScroll = () => {
+      const isScrolled = window.scrollY > 10;
+      setScrolled(isScrolled);
+    };
 
-  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
+  const toggleMenu = () => {
+    setIsOpen(!isOpen);
   };
 
+  const closeMenu = () => {
+    setIsOpen(false);
+  };
+
+  const isActivePath = (path: string) => {
+    return location.pathname === path;
+  };
+
+  const navLinks = [
+    { name: 'Home', href: '/' },
+    { name: 'Products', href: '/products' },
+    { name: 'About', href: '/about' },
+    { name: 'Contact', href: '/contact' },
+  ];
+
   return (
-    <nav className="bg-white shadow-sm sticky top-0 z-50">
-      <div className="container mx-auto px-4 py-3">
-        <div className="flex items-center justify-between">
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      scrolled 
+        ? 'bg-white/95 backdrop-blur-md shadow-lg' 
+        : 'bg-white/90 backdrop-blur-sm'
+    }`}>
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16 lg:h-20">
+          
           {/* Logo */}
-          <Link to="/" className="flex items-center">
-            <span className="font-heading text-2xl font-bold text-bakery-black">
-              Fortune<span className="text-bakery-pink">Cakes</span>
-            </span>
+          <Link to="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity" onClick={closeMenu}>
+            <img 
+              src="/lovable-uploads/4dda7e70-2eb0-4c8b-ae83-4b4c8b9a5b64.png" 
+              alt="Fortune Cakes Logo" 
+              className="h-10 w-auto lg:h-12"
+              onError={(e) => {
+                // Fallback if logo fails to load
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.nextElementSibling.style.display = 'block';
+              }}
+            />
+            <div className="hidden font-heading">
+              <span className="text-xl lg:text-2xl font-bold text-bakery-black">Fortune</span>
+              <span className="text-xl lg:text-2xl font-bold text-bakery-pink ml-1">Cakes</span>
+            </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden lg:flex items-center space-x-8">
             {navLinks.map((link) => (
               <Link
                 key={link.name}
-                to={link.path}
-                className="font-medium text-bakery-black-light hover:text-bakery-pink transition-colors"
+                to={link.href}
+                className={`text-sm font-medium transition-colors hover:text-bakery-pink ${
+                  isActivePath(link.href) 
+                    ? 'text-bakery-pink border-b-2 border-bakery-pink pb-1' 
+                    : 'text-gray-700'
+                }`}
               >
                 {link.name}
               </Link>
             ))}
           </div>
 
-          {/* Phone Number */}
-          <div className="hidden md:flex items-center mr-4">
-            <a href="tel:+2347069126887" className="flex items-center text-bakery-black-light hover:text-bakery-pink">
-              <Phone size={16} className="mr-2" />
-              <span>+234 706 912 6887</span>
-            </a>
-          </div>
+          {/* Right Side Actions */}
+          <div className="flex items-center space-x-4">
+            
+            {/* Contact Info - Desktop Only */}
+            <div className="hidden xl:flex items-center space-x-2 text-sm text-gray-600">
+              <Phone size={16} className="text-bakery-pink" />
+              <span>+234 (0) 803 123 4567</span>
+            </div>
 
-          {/* Action Buttons */}
-          <div className="hidden md:flex items-center space-x-4">
-            {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full">
-                    <User size={20} className="text-bakery-black-light" />
+            {/* Search Button - Hidden on mobile for space */}
+            <Link to="/products" className="hidden sm:block">
+              <Button variant="ghost" size="sm" className="hover:bg-bakery-pink/10">
+                <Search size={18} />
+              </Button>
+            </Link>
+
+            {/* Cart */}
+            <Link to="/cart" className="relative">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="hover:bg-bakery-pink/10 relative"
+                aria-label={`Shopping cart with ${totalItems} items`}
+              >
+                <ShoppingBag size={18} />
+                {totalItems > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-bakery-pink text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                    {totalItems > 99 ? '99+' : totalItems}
+                  </span>
+                )}
+              </Button>
+            </Link>
+
+            {/* User Account */}
+            <div className="relative">
+              {user ? (
+                <div className="hidden sm:flex items-center space-x-2">
+                  <Link to="/account">
+                    <Button variant="ghost" size="sm" className="hover:bg-bakery-pink/10">
+                      <User size={18} />
+                    </Button>
+                  </Link>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={logout}
+                    className="text-xs hover:bg-red-50 hover:text-red-600"
+                  >
+                    Logout
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => navigate('/account')}>
-                    My Account
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/orders')}>
-                    My Orders
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Link to="/auth" className="p-2 rounded-full hover:bg-muted transition-colors">
-                <User size={20} className="text-bakery-black-light" />
-              </Link>
-            )}
-            <Link to="/cart" className="relative p-2 rounded-full hover:bg-muted transition-colors">
-              <ShoppingBag size={20} className="text-bakery-black-light" />
-              {totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 bg-bakery-pink text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                  {totalItems}
-                </span>
-              )}
-            </Link>
-          </div>
-
-          {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center">
-            <Link to="/cart" className="relative p-2 mr-2">
-              <ShoppingBag size={20} className="text-bakery-black-light" />
-              {totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 bg-bakery-pink text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                  {totalItems}
-                </span>
-              )}
-            </Link>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleMenu}
-              className="p-2"
-              aria-label="Toggle menu"
-            >
-              {isMenuOpen ? (
-                <X size={24} className="text-bakery-black-light" />
+                </div>
               ) : (
-                <Menu size={24} className="text-bakery-black-light" />
+                <Link to="/auth" className="hidden sm:block">
+                  <Button variant="ghost" size="sm" className="hover:bg-bakery-pink/10">
+                    <User size={18} />
+                  </Button>
+                </Link>
               )}
-            </Button>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={toggleMenu}
+              className="lg:hidden p-2 rounded-md hover:bg-gray-100 transition-colors"
+              aria-label="Toggle mobile menu"
+            >
+              {isOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
           </div>
         </div>
 
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="md:hidden pt-4 pb-3 border-t mt-3">
-            <div className="flex flex-col space-y-3">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  to={link.path}
-                  className="px-3 py-2 font-medium text-bakery-black-light hover:bg-muted rounded"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {link.name}
-                </Link>
-              ))}
-              {user ? (
-                <>
+        {/* Mobile Navigation Menu */}
+        {isOpen && (
+          <div className="lg:hidden absolute top-full left-0 right-0 bg-white border-t shadow-lg">
+            <div className="container mx-auto px-4 py-4">
+              <div className="flex flex-col space-y-4">
+                
+                {/* Navigation Links */}
+                {navLinks.map((link) => (
                   <Link
-                    to="/account"
-                    className="px-3 py-2 font-medium text-bakery-black-light hover:bg-muted rounded flex items-center"
-                    onClick={() => setIsMenuOpen(false)}
+                    key={link.name}
+                    to={link.href}
+                    onClick={closeMenu}
+                    className={`text-base font-medium py-2 px-3 rounded-md transition-colors ${
+                      isActivePath(link.href)
+                        ? 'text-bakery-pink bg-bakery-pink/10'
+                        : 'text-gray-700 hover:text-bakery-pink hover:bg-gray-50'
+                    }`}
                   >
-                    <User size={18} className="mr-2" /> My Account
+                    {link.name}
                   </Link>
+                ))}
+                
+                {/* Mobile-only items */}
+                <div className="border-t pt-4 mt-4">
                   <Link
-                    to="/orders"
-                    className="px-3 py-2 font-medium text-bakery-black-light hover:bg-muted rounded flex items-center"
-                    onClick={() => setIsMenuOpen(false)}
+                    to="/products"
+                    onClick={closeMenu}
+                    className="flex items-center space-x-2 text-gray-700 hover:text-bakery-pink py-2 px-3 rounded-md transition-colors"
                   >
-                    Orders
+                    <Search size={18} />
+                    <span>Search Products</span>
                   </Link>
-                  <button
-                    onClick={() => {
-                      handleSignOut();
-                      setIsMenuOpen(false);
-                    }}
-                    className="px-3 py-2 font-medium text-bakery-black-light hover:bg-muted rounded flex items-center w-full text-left"
-                  >
-                    <LogOut size={18} className="mr-2" /> Sign Out
-                  </button>
-                </>
-              ) : (
-                <Link
-                  to="/auth"
-                  className="px-3 py-2 font-medium text-bakery-black-light hover:bg-muted rounded flex items-center"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <User size={18} className="mr-2" /> Sign In
-                </Link>
-              )}
-              <a
-                href="tel:+2347069126887"
-                className="px-3 py-2 font-medium text-bakery-black-light hover:bg-muted rounded flex items-center"
-              >
-                <Phone size={18} className="mr-2" /> +234 706 912 6887
-              </a>
+                  
+                  {user ? (
+                    <>
+                      <Link
+                        to="/account"
+                        onClick={closeMenu}
+                        className="flex items-center space-x-2 text-gray-700 hover:text-bakery-pink py-2 px-3 rounded-md transition-colors"
+                      >
+                        <User size={18} />
+                        <span>My Account</span>
+                      </Link>
+                      <button
+                        onClick={() => {
+                          logout();
+                          closeMenu();
+                        }}
+                        className="flex items-center space-x-2 text-red-600 hover:bg-red-50 py-2 px-3 rounded-md transition-colors w-full text-left"
+                      >
+                        <span>Logout</span>
+                      </button>
+                    </>
+                  ) : (
+                    <Link
+                      to="/auth"
+                      onClick={closeMenu}
+                      className="flex items-center space-x-2 text-gray-700 hover:text-bakery-pink py-2 px-3 rounded-md transition-colors"
+                    >
+                      <User size={18} />
+                      <span>Login / Register</span>
+                    </Link>
+                  )}
+                  
+                  {/* Contact Info */}
+                  <div className="flex items-center space-x-2 text-gray-600 py-2 px-3">
+                    <Phone size={16} className="text-bakery-pink" />
+                    <span className="text-sm">+234 (0) 803 123 4567</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
